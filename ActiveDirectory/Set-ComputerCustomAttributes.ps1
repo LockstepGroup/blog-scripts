@@ -1,4 +1,4 @@
-﻿###################################################################################################
+###################################################################################################
 #
 # ScriptName: Set-ComputerCustomAttributes.ps1
 # Auther: eshoemaker@lockstepgroup.com
@@ -90,7 +90,7 @@ Write-Log "Serial Number = $SerialNumber"
 Write-Log "SEARCHING FOR COMPUTER OBJECT $ComputerName"
 
 $Searcher = New-Object adsisearcher
-$Searcher.Filter = "(&(name=$ComputerName)(objectcategory=computer))"
+$Searcher.Filter = "(&amp;(name=$ComputerName)(objectcategory=computer))"
 $Searcher.PropertiesToLoad.Add("$LastLoggedOnUserAttribute")
 $Searcher.PropertiesToLoad.Add("$LastLoggedOnUserDateAttribute")
 $Searcher.PropertiesToLoad.Add("$HWVendorAttribute")
@@ -182,4 +182,3 @@ If ($SerialNumberValue -eq $SerialNumber){
 
 # ENDING LOG
 Write-Log "---------------------ENDING CUSTOM ATTRIBUTE SCRIPT---------------------"
-
