@@ -1,8 +1,8 @@
-###################################################################################################
+﻿###################################################################################################
 #
 # ScriptName: Set-ComputerCustomAttributes.ps1
 # Auther: eshoemaker@lockstepgroup.com
-# Last Updated: Q1 2017
+# Last Updated: Q2 2017
 # Sets custom Active Directory attributes
 # Reference URL:
 #
@@ -14,8 +14,7 @@
 # Create custom attributes in AD and attach to the computer class
 # Delegate "SELF" permissions to write to the custom attributes created on computer objects
 # Set the variables at the beginning of this script to match your custom attributes exactly
-# For easy troubleshooting, set the $GenerateLog variable to $True. Be sure to set to $false in 
-# production
+# For easy troubleshooting, set the $GenerateLog variable to $True. Be sure to set to $false in production
 # 
 ###################################################################################################
 
@@ -63,7 +62,7 @@ Write-Log "GATHERING LAST LOGGED ON USER INFO"
 
 $LogonType=2 #Interactive Logon
 $30Days=(Get-Date).adddays(-30)
-$LogonEvent=(Get-EventLog -LogName Security -InstanceId 4624 -After $30Days | Where {$_.ReplacementStrings[8] -eq $LogonType})[0]
+$LogonEvent=(Get-EventLog -LogName Security -InstanceId 4624 -After $30Days | Where {$_.ReplacementStrings[8] -eq $LogonType -and $_.ReplacementStrings[6] -ne "Window Manager"})[0]
 $LoggedOnUser=($LogonEvent.ReplacementStrings[6])+'\'+($LogonEvent.ReplacementStrings[5])
 $Date=$LogonEvent.TimeGenerated
 
@@ -90,7 +89,7 @@ Write-Log "Serial Number = $SerialNumber"
 Write-Log "SEARCHING FOR COMPUTER OBJECT $ComputerName"
 
 $Searcher = New-Object adsisearcher
-$Searcher.Filter = "(&amp;(name=$ComputerName)(objectcategory=computer))"
+$Searcher.Filter = "(&(name=$ComputerName)(objectcategory=computer))"
 $Searcher.PropertiesToLoad.Add("$LastLoggedOnUserAttribute")
 $Searcher.PropertiesToLoad.Add("$LastLoggedOnUserDateAttribute")
 $Searcher.PropertiesToLoad.Add("$HWVendorAttribute")
@@ -182,3 +181,4 @@ If ($SerialNumberValue -eq $SerialNumber){
 
 # ENDING LOG
 Write-Log "---------------------ENDING CUSTOM ATTRIBUTE SCRIPT---------------------"
+
