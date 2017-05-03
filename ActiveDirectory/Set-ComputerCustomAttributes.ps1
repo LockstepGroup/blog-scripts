@@ -14,7 +14,8 @@
 # Create custom attributes in AD and attach to the computer class
 # Delegate "SELF" permissions to write to the custom attributes created on computer objects
 # Set the variables at the beginning of this script to match your custom attributes exactly
-# For easy troubleshooting, set the $GenerateLog variable to $True. Be sure to set to $false in production
+# For easy troubleshooting, set the $GenerateLog variable to $True. Be sure to set to $false in 
+# production
 # 
 ###################################################################################################
 
