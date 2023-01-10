@@ -4,7 +4,7 @@
 # Auther: eshoemaker@lockstepgroup.com
 # Last Updated: Q2 2017
 # Sets custom Active Directory attributes
-# Reference URL:
+# Reference URL: https://lockstepgroup.com/blog/fun-with-ad-custom-attributes/
 #
 ###################################################################################################
 
