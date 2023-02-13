@@ -4,7 +4,7 @@
 # Auther: eshoemaker@lockstepgroup.com
 # Last Updated: Q2 2017
 # Sets custom Active Directory attributes
-# Reference URL:
+# Reference URL: https://lockstepgroup.com/blog/fun-with-ad-custom-attributes/
 #
 ###################################################################################################
 
@@ -61,11 +61,33 @@ $ComputerName=$env:COMPUTERNAME
 Write-Log "Computer Name = $ComputerName"
 Write-Log "GATHERING LAST LOGGED ON USER INFO"
 
-$LogonType=2 #Interactive Logon
 $30Days=(Get-Date).adddays(-30)
-$LogonEvent=(Get-EventLog -LogName Security -InstanceId 4624 -After $30Days | Where {$_.ReplacementStrings[8] -eq $LogonType -and $_.ReplacementStrings[6] -ne "Window Manager"})[0]
-$LoggedOnUser=($LogonEvent.ReplacementStrings[6])+'\'+($LogonEvent.ReplacementStrings[5])
-$Date=$LogonEvent.TimeGenerated
+
+function LogOnSuccess {
+        Try {
+            $Events = Get-WinEvent -MaxEvents 1 -LogName "Security" -FilterXPath "*[System[(EventID='4624')] and EventData[Data[@Name='LogonType'] and (Data='2' or Data='10' or Data='11')]`
+ and EventData[Data[@Name='TargetDomainName']!='Window Manager'] and EventData[Data[@Name='TargetDomainName']!='Font Driver Host']and EventData[Data[@Name='TargetUserName']!='Administrator'] and EventData[Data[@Name='TargetUserName']!='SYSTEM'] and EventData[Data[@Name='TargetUserName']!='SYSTEM'] and EventData[Data[@Name='TargetUserName']!='LOCAL SERVICE'] and EventData[Data[@Name='TargetUserName']!='SCCM_Svc'] and EventData[Data[@Name='TargetUserName']!='NETWORK SERVICE']]" -ErrorAction Stop
+            ForEach ($Event in $Events) {
+                $eventXML = [xml]$Event.ToXml()
+                Add-Member -InputObject $Event -MemberType NoteProperty -Force -Name "TimeCreate" -Value $Event.TimeCreated
+                FOREACH ($j in $eventXML.Event.System.ChildNodes) {
+                    Add-Member -InputObject $Event -MemberType NoteProperty -Force -Name $j.ToString() -Value $eventXML.Event.System.($j.ToString())
+                }
+                For ($i=0; $i -lt $eventXML.Event.EventData.Data.Count; $i++) {
+                    Add-Member -InputObject $Event -MemberType NoteProperty -Force -Name $eventXML.Event.EventData.Data[$i].name -Value $eventXML.Event.EventData.Data[$i].'#text'
+                }
+            }
+                $global:LoggedOnUser=($Events | select -expand TargetUserName)
+                $global:LoggedOnDomain=($Events | select -expand TargetDomainName)
+                $global:Date=($Events | select -expand TimeCreate)
+                $global:LoggedOnUser=($global:LoggedOnDomain)+'\'+($global:LoggedOnUser)
+        }
+        Catch { return 'Result: Null'}
+    }
+
+
+
+LogOnSuccess
 
 Write-Log "Last Logged On User = $LoggedOnUser"
 
