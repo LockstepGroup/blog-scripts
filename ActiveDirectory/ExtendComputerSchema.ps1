@@ -111,12 +111,25 @@ if ($dryRun) {
     Write-Host "Test Add to User Schema Command"
     Write-Host "$ComputerSchema | Set-ADObject -Add @{mayContain = $($tmpAttrib[0])}"
     Write-Host "******"
-            exit 0
+          
         } else {
 
-New-ADObject -Name  $($tmpAttrib[0]) -Type attributeSchema -Path $schemaPath -OtherAttributes $Attribute
-$ComputerSchema | Set-ADObject -Add @{mayContain = $($tmpAttrib[0])}
-Write-host "Attributes created"
+try { 
+ New-ADObject -Name  $($tmpAttrib[0]) -Type attributeSchema -Path $schemaPath -OtherAttributes $Attribute 
+    try { 
+    $ComputerSchema | Set-ADObject -Add @{mayContain = $($tmpAttrib[0])} 
+        } catch {
+        Write-Host "An error occurred:"
+        Write-Host $_
+        exit 0
+        }
+    } catch {
+  Write-Host "An error occurred:"
+  Write-Host $_
+  exit 0
+}
 
-    }
+    Write-host "Attributes created"
+
+  }
 }
