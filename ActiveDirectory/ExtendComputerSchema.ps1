@@ -3,7 +3,6 @@ Extend User Schema
 Script: ExtendComputerSchema.ps1
 Reference URL: https://www.linkedin.com/pulse/using-powershell-extend-user-schema-active-directory-james-sargent/
 
-$dryRun = $true # A dry run will not attempt to Update the schema and just show the command results. Recommend set to $false after testing.
 
 Author: James Sargent
 Created: 2019/03/19
@@ -15,12 +14,7 @@ Always test your schema changes in a test environment before making any changes.
 Requirements
 PowerShell 4.0 or higher
 AD PowerShell Modules (RSAT)
- 
- # Self-elevate the script if required
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Start-Process PowerShell -Verb RunAs "-NoProfile -ExecutionPolicy Bypass -Command `"cd '$pwd'; & '$PSCommandPath';`"";
-    exit;
-}
+
 
 CSV Not Used -CSV File configuration
 CSV Not Used -Name,oMSyntax,AttributeSyntax,isSingleValued,Description,Indexed
@@ -38,6 +32,13 @@ isSingleValued: True or False
 Description:  Keep it short, I avoid commas in mine
 Indexed: Yes or No
 #>
+$dryRun = $true # A dry run will not attempt to Update the schema and just show the command results. Recommend set to $false after testing.
+
+ # Self-elevate the script if required
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Start-Process PowerShell -Verb RunAs "-NoProfile -ExecutionPolicy Bypass -Command `"cd '$pwd'; & '$PSCommandPath';`"";
+    exit;
+}
  
 # Set the path and file name to your import file
 #$arrAttributes = Import-CSV "c:\Scriptes\NewAttributes.csv"
