@@ -39,7 +39,19 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
     Start-Process PowerShell -Verb RunAs "-NoProfile -ExecutionPolicy Bypass -Command `"cd '$pwd'; & '$PSCommandPath';`"";
     exit;
 }
- 
+
+# Add self to Schema Admins
+try {
+    Add-ADGroupMember -Identity "Schema Admins" -members $env:UserName
+    Write-Host "$env:UserName added to Schema Admins groups"
+    } catch  {
+    Write-Host "$env:UserName already in Admins groups or an error occured"
+    Write-Host $_
+}
+
+Stop-Service -DisplayName 'Active Directory Domain Services' -Force
+Start-Service -DisplayName 'Active Directory Domain Services'
+
 # Set the path and file name to your import file
 #$arrAttributes = Import-CSV "c:\Scriptes\NewAttributes.csv"
 # hard coded Attributeds
