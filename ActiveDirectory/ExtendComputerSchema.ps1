@@ -2,10 +2,12 @@
 Extend User Schema
 Script: ExtendComputerSchema.ps1
 Reference URL: https://www.linkedin.com/pulse/using-powershell-extend-user-schema-active-directory-james-sargent/
- 
+
+$dryRun = $true # A dry run will not attempt to Update the schema and just show the command results. Recommend set to $false after testing.
+
 Author: James Sargent
 Created: 2019/03/19
- 
+
 Summary
 This script creates AD Attributes for computers; after running the script successfully, you should see additional attributes assigned to the computer.  
 Always test your schema changes in a test environment before making any changes.
@@ -14,7 +16,12 @@ Requirements
 PowerShell 4.0 or higher
 AD PowerShell Modules (RSAT)
  
- 
+ # Self-elevate the script if required
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Start-Process PowerShell -Verb RunAs "-NoProfile -ExecutionPolicy Bypass -Command `"cd '$pwd'; & '$PSCommandPath';`"";
+    exit;
+}
+
 CSV Not Used -CSV File configuration
 CSV Not Used -Name,oMSyntax,AttributeSyntax,isSingleValued,Description,Indexed
 
@@ -43,7 +50,7 @@ $arrAttributes = @(
 ("Custom-HardwareVendor","64","2.5.5.12","TRUE","Hardware Manufacturer","YES"),
 ("Custom-HardwareModel","64","2.5.5.12","TRUE","Hardware Model","YES"),
 ("Custom-SerialNumber","64","2.5.5.12","TRUE","For populating the serial number of each computer","YES"),
-("Custom-SNID","64,2.5.5.12","TRUE","Acer specific SNID if available","YES")
+("Custom-SNID","64","2.5.5.12","TRUE","Acer specific SNID if available","YES")
 )
 
 
@@ -82,18 +89,33 @@ ForEach ($tmpAttrib in $arrAttributes)
 {
 # Build OtherAttributes
 $Attribute = @{
-  lDAPDisplayName = $tmpAttrib.Name;
+  lDAPDisplayName = $tmpAttrib[0];
   attributeId = funGenOID
-  oMSyntax = $tmpAttrib.oMSyntax;
-  attributeSyntax =  $tmpAttrib.AttributeSyntax;
-  isSingleValued = if ($tmpAttrib.isSingleValued -like "*true*") {$True} else {$false};
-  adminDescription = $tmpAttrib.Description;
-  searchflags = if ($tmpAttrib.Indexed -like "yes") {1} else {0}
+  oMSyntax = $tmpAttrib[1];
+  attributeSyntax =  $($tmpAttrib[2]);
+  isSingleValued = if ($($tmpAttrib[3]).isSingleValued -like "*true*") {$True} else {$false};
+  adminDescription = $($tmpAttrib[4]);
+  searchflags = if ($($tmpAttrib[5]) -like "yes") {1} else {0}
   }
- 
-# Build Object
-New-ADObject -Name  $tmpAttrib.Name -Type attributeSchema -Path $schemaPath -OtherAttributes $Attribute
- 
-# Add to User Schema
-$userSchema | Set-ADObject -Add @{mayContain = $tmpAttrib.Name}
+
+if ($dryRun) {
+    Write-Host "******"
+    Write-Host "TEST Build Object"
+    Write-Host "******"
+    Write-Host "New-ADObject -Name  $($tmpAttrib[0]) -Type attributeSchema -Path $schemaPath -OtherAttributes $Attribute"
+    Write-Host "******"
+    Write-Host "Test Attribulets"
+    $Attribute | Select -expand $ExternalConnectionSettings
+    Write-Host "******"
+    Write-Host "Test Add to User Schema Command"
+    Write-Host "$ComputerSchema | Set-ADObject -Add @{mayContain = $($tmpAttrib[0])}"
+    Write-Host "******"
+            exit 0
+        } else {
+
+New-ADObject -Name  $($tmpAttrib[0]) -Type attributeSchema -Path $schemaPath -OtherAttributes $Attribute
+$ComputerSchema | Set-ADObject -Add @{mayContain = $($tmpAttrib[0])}
+Write-host "Attributes created"
+
+    }
 }
